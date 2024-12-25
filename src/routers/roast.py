@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 import urllib.parse
 import requests
+from requests.exceptions import HTTPError
 
 from enum import Enum
 
@@ -23,7 +24,8 @@ async def get_profiles(profile_type: RoastProfile, token: str):
 
     print(get_profiles_url)
 
-    r = requests.post(get_profiles_url, 
+    try:
+        r = requests.post(get_profiles_url, 
                       headers=DEFAULT_HEADERS,
                       verify=False,
                       json={
@@ -34,7 +36,13 @@ async def get_profiles(profile_type: RoastProfile, token: str):
                       },
                       auth=auth.BearerAuth(token)
                     )
-    return {"message": r.json()}
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
+
 
 @router.get("/{profile_type}/profile/{profile_id}")
 async def get_profile_by_id(profile_type: RoastProfile, profile_id: str, token: str):
@@ -43,11 +51,17 @@ async def get_profile_by_id(profile_type: RoastProfile, profile_id: str, token: 
 
     print(get_profile_by_id_url)
 
-    r = requests.get(get_profile_by_id_url, 
+    try:
+        r = requests.get(get_profile_by_id_url, 
                       headers=DEFAULT_HEADERS,
                       verify=False,
                       auth=auth.BearerAuth(token)
                     )
-    return {"message": r.json()}
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
 
 router.include_router(user.router, prefix="/user")
