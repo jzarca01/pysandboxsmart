@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from typing import Literal, List, Optional
 
 import urllib.parse
 import requests
+from requests.exceptions import HTTPError
 
 import auth
 from consts import BASE_URL, DEFAULT_HEADERS
@@ -31,7 +32,11 @@ class ExpectedResult(BaseModel):
 class CoffeeRawBean(BaseModel):
     process: Literal['GA', 'Washed', 'Natural', 'Honey', 'Anaerobic', 'Others']
     region: Literal['GA', 'AF', 'AM', 'CA', 'SA', 'AS']
-    country: Literal['GA', 'MW', 'K']
+    country: Literal['GA', 'MW', 'KY', 'YE', 'ET', 'PE', 'HN', 'PG', 'SV', 'ID', 'GT', 'BR', 'CR', 'CO', 'Others', 'PM', 'RW']
+    altitude: Optional[Literal['EXTREMEHIGH']] = 'EXTREMEHIGH'
+    variety: Optional[Literal['Original']] = 'Original'
+    level: Optional[Literal['G1']] = 'G1',
+    flavor: Optional[Literal['GA', 'Tasty', '#Tasty']] = 'GA',
 
 class Data(BaseModel):
     plannedHeats: List[DataPoint]
@@ -66,13 +71,19 @@ async def create_profile(profile: Profile, token: str):
 
     print(create_profile_url)
 
-    r = requests.post(create_profile_url, 
-                      headers=DEFAULT_HEADERS,
-                      verify=False,
-                      json=jsonable_encoder(profile),
-                      auth=auth.BearerAuth(token)
-                    )
-    return {"message": r.json()}
+    try:
+        r = requests.post(create_profile_url, 
+                        headers=DEFAULT_HEADERS,
+                        verify=False,
+                        json=jsonable_encoder(profile),
+                        auth=auth.BearerAuth(token)
+                        )
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
 
 @router.patch("/edit/{profile_id}")
 async def edit_profile_by_id(profile_id: str, profile: Profile, token: str):
@@ -81,10 +92,16 @@ async def edit_profile_by_id(profile_id: str, profile: Profile, token: str):
 
     print(edit_profile_by_id_url)
 
-    r = requests.patch(edit_profile_by_id_url, 
+    try:
+        r = requests.patch(edit_profile_by_id_url, 
                       headers=DEFAULT_HEADERS,
                       verify=False,
                       json=jsonable_encoder(profile),
                       auth=auth.BearerAuth(token)
                     )
-    return {"message": r.json()}
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)

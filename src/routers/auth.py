@@ -4,6 +4,7 @@ from typing import Annotated
 
 import urllib.parse
 import requests
+from requests.exceptions import HTTPError
 
 import auth
 from consts import BASE_URL, DEFAULT_HEADERS
@@ -14,6 +15,7 @@ router = APIRouter()
 @router.post("/login")
 async def login(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     login_url = urllib.parse.urljoin(BASE_URL, '/api/authn/signInByEmail/v3')
+    print("credentials" + str(credentials))
     try:
       r = requests.post(login_url, 
                         json={
@@ -26,10 +28,9 @@ async def login(credentials: Annotated[HTTPBasicCredentials, Depends(security)])
                       )
       if r.ok:
         response = r.json()
-        print(response)
-        return { "access_token": response['resultBody']['user']['tokenid'], "token_type": "bearer"}
+        return { **response['resultBody'], "access_token": response['resultBody']['user']['tokenid'], "token_type": "bearer" }
       raise r.raise_for_status()
-    except requests.exceptions.HTTPError as err:
+    except HTTPError as err:
        raise HTTPException(err)
        
 
@@ -37,9 +38,15 @@ async def login(credentials: Annotated[HTTPBasicCredentials, Depends(security)])
 async def get_token(token: str):
     get_token_url = urllib.parse.urljoin(BASE_URL, '/api/authn/user/token')
 
-    r = requests.post(get_token_url, 
+    try: 
+      r = requests.post(get_token_url, 
                       headers=DEFAULT_HEADERS,
                       verify=False,
                       auth=auth.BearerAuth(token)
                     )
-    return {"message": r.json()}
+      if r.ok:
+        response = r.json()
+        return { **response['resultBody'], "access_token": response['resultBody']['user']['tokenid'], "token_type": "bearer" }
+      raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
