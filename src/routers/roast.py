@@ -60,6 +60,8 @@ async def get_profile_by_id(profile_type: RoastProfile, profile_id: str, token: 
         if r.ok:
             response = r.json()
             return response['resultBody']
+        else:
+            print(r)
         raise r.raise_for_status()
     except HTTPError as err:
        raise HTTPException(err)

@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/login")
 async def login(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
     login_url = urllib.parse.urljoin(BASE_URL, '/api/authn/signInByEmail/v3')
-    
+    print("credentials" + str(credentials))
     try:
       r = requests.post(login_url, 
                         json={
