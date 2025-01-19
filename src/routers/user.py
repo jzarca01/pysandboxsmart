@@ -69,8 +69,6 @@ async def create_profile(profile: Profile, token: str):
     profile_path = f"/api/roast/user/profile/post"
     create_profile_url = urllib.parse.urljoin(BASE_URL, profile_path)
 
-    print(create_profile_url)
-
     try:
         r = requests.post(create_profile_url, 
                         headers=DEFAULT_HEADERS,
@@ -90,10 +88,105 @@ async def edit_profile_by_id(profile_id: str, profile: Profile, token: str):
     profile_path = f"/api/roast/user/profile/patch/{profile_id}"
     edit_profile_by_id_url = urllib.parse.urljoin(BASE_URL, profile_path)
 
-    print(edit_profile_by_id_url)
-
     try:
         r = requests.patch(edit_profile_by_id_url, 
+                      headers=DEFAULT_HEADERS,
+                      verify=False,
+                      json=jsonable_encoder(profile),
+                      auth=auth.BearerAuth(token)
+                    )
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
+
+@router.get("/results")
+async def get_results(token: str):
+    results_path = f"/api/roast/results/get"
+    results_url = urllib.parse.urljoin(BASE_URL, results_path)
+
+    results_filters = {
+        "lowOfRawBeanWeight": 0,
+        "structVersion": 1,
+        "structType": "Roast",
+        "beanProcessSet": ["GA", "Washed", "Natural", "Honey", "Anaerobic", "Others"],
+        "beanRegion": "",
+        "size": 100,
+        "timePeriod": "",
+        "model": "",
+        "sortMap": {
+            "createDate": "DESC"
+        },
+        "upperOfRawBeanWeight": 550,
+        "page": 0
+    }
+
+    try:
+        r = requests.post(results_url, 
+                      headers=DEFAULT_HEADERS,
+                      verify=False,
+                      json=jsonable_encoder(results_filters),
+                      auth=auth.BearerAuth(token)
+                    )
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
+
+@router.get("/results/{result_id}")
+async def get_result_by_id(result_id: str, token: str):
+    results_path = f"/api/roast/result/get/{result_id}"
+    results_url = urllib.parse.urljoin(BASE_URL, results_path)
+
+    try:
+        r = requests.post(results_url, 
+                      headers=DEFAULT_HEADERS,
+                      verify=False,
+                      auth=auth.BearerAuth(token)
+                    )
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
+    
+@router.post("/results/share/{result_id}")
+async def share_result_by_id(result_id: str, profile: Profile, email: str, token: str):
+    results_path = f"/api/roast/result/share"
+    results_url = urllib.parse.urljoin(BASE_URL, results_path)
+
+    share_result = {
+        "resultId": result_id,
+        "profileName": profile.profileName,
+        "email": email
+    }
+
+    try:
+        r = requests.post(results_url, 
+                      headers=DEFAULT_HEADERS,
+                      json=jsonable_encoder(share_result),
+                      verify=False,
+                      auth=auth.BearerAuth(token)
+                    )
+        if r.ok:
+            response = r.json()
+            return response['resultBody']
+        raise r.raise_for_status()
+    except HTTPError as err:
+       raise HTTPException(err)
+    
+@router.patch("/results/{result_id}")
+async def edit_result_by_id(result_id: str, profile: Profile, token: str):
+    results_path = f"/api/roast/result/patch/v2/{result_id}"
+    results_url = urllib.parse.urljoin(BASE_URL, results_path)
+
+    try:
+        r = requests.patch(results_url, 
                       headers=DEFAULT_HEADERS,
                       verify=False,
                       json=jsonable_encoder(profile),

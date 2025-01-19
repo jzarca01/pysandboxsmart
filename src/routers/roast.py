@@ -22,8 +22,6 @@ async def get_profiles(profile_type: RoastProfile, token: str):
     profiles_path = f"/api/roast/{profile_type}/profiles/get"
     get_profiles_url = urllib.parse.urljoin(BASE_URL, profiles_path)
 
-    print(get_profiles_url)
-
     try:
         r = requests.post(get_profiles_url, 
                       headers=DEFAULT_HEADERS,
@@ -48,8 +46,6 @@ async def get_profiles(profile_type: RoastProfile, token: str):
 async def get_profile_by_id(profile_type: RoastProfile, profile_id: str, token: str):
     profile_path = f"/api/roast/{profile_type}/profile/{profile_id}"
     get_profile_by_id_url = urllib.parse.urljoin(BASE_URL, profile_path)
-
-    print(get_profile_by_id_url)
 
     try:
         r = requests.get(get_profile_by_id_url, 
