@@ -19,7 +19,7 @@ class RoastProfile(str, Enum):
 
 @router.get("/{profile_type}/profiles/get")
 async def get_profiles(profile_type: RoastProfile, token: str):
-    profiles_path = f"/api/roast/{profile_type}/profiles/get"
+    profiles_path = f"/api/roast/{profile_type.value}/profiles/get"
     get_profiles_url = urllib.parse.urljoin(BASE_URL, profiles_path)
 
     print(get_profiles_url)
@@ -46,7 +46,7 @@ async def get_profiles(profile_type: RoastProfile, token: str):
 
 @router.get("/{profile_type}/profile/{profile_id}")
 async def get_profile_by_id(profile_type: RoastProfile, profile_id: str, token: str):
-    profile_path = f"/api/roast/{profile_type}/profile/{profile_id}"
+    profile_path = f"/api/roast/{profile_type.value}/profile/{profile_id}"
     get_profile_by_id_url = urllib.parse.urljoin(BASE_URL, profile_path)
 
     print(get_profile_by_id_url)
